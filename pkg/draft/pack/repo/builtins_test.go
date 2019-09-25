@@ -16,12 +16,12 @@ func TestBuiltins(t *testing.T) {
 		t.Errorf("expected 1 builtin, got %d", len(builtins))
 	}
 
-	if builtins[0].URL != "https://github.com/Azure/draft" {
-		t.Error("expected https://github.com/Azure/draft to be in the builtin list")
+	if builtins[0].URL != "https://github.com/rakol-ms/draft" {
+		t.Error("expected https://github.com/rakol-ms/draft to be in the builtin list")
 	}
 
-	if builtins[0].Name != "github.com/Azure/draft" {
-		t.Error("expected github.com/Azure/draft to be in the builtin list")
+	if builtins[0].Name != "github.com/rakol-ms/draft" {
+		t.Error("expected github.com/rakol-ms/draft to be in the builtin list")
 	}
 
 	if builtins[0].Version != "" {

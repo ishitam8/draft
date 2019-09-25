@@ -11,18 +11,10 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/Azure/draft/pkg/draft/draftpath"
+	"github.com/BurntSushi/toml"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/helm/pkg/helm"
-	hpf "k8s.io/helm/pkg/helm/portforwarder"
-	"k8s.io/helm/pkg/kube"
-	"k8s.io/helm/pkg/tiller/environment"
-
-	"github.com/Azure/draft/pkg/draft/draftpath"
 )
 
 const (
@@ -33,24 +25,19 @@ const (
 
 var (
 	// flagDebug is a signal that the user wants additional output.
-	flagDebug   bool
-	kubeContext string
+	flagDebug bool
 	// draftHome depicts the home directory where all Draft config is stored.
 	draftHome string
-	// tillerHost depicts where Tiller is hosted. This is used when the port forwarding logic by Kubernetes is unavailable.
-	tillerHost string
-	// tillerNamespace depicts which namespace Tiller is running in. This is used when Tiller was installed in a different namespace than kube-system.
-	tillerNamespace string
-	// displayEmoji shows emoji in the console output
-	displayEmoji bool
 	//rootCmd is the root command handling `draft`. It's used in other parts of package cmd to add/search the command tree.
 	rootCmd *cobra.Command
 	// globalConfig is the configuration stored in $DRAFT_HOME/config.toml
 	globalConfig DraftConfig
 )
 
-var globalUsage = `The application deployment tool for Kubernetes.
-`
+var globalUsage = `The application deployment tool for Kubernetes.`
+
+// DraftConfig is the configuration stored in $DRAFT_HOME/config.toml
+type DraftConfig map[string]string
 
 func init() {
 	rootCmd = newRootCmd(os.Stdout, os.Stdin)
@@ -73,28 +60,24 @@ func newRootCmd(out io.Writer, in io.Reader) *cobra.Command {
 	}
 	p := cmd.PersistentFlags()
 	p.StringVar(&draftHome, "home", defaultDraftHome(), "location of your Draft config. Overrides $DRAFT_HOME")
-	p.BoolVar(&flagDebug, "debug", false, "enable verbose output")
-	p.StringVar(&kubeContext, "kube-context", "", "name of the kubeconfig context to use when talking to Tiller")
-	p.StringVar(&tillerNamespace, "tiller-namespace", defaultTillerNamespace(), "namespace where Tiller is running. This is used when Tiller was installed in a different namespace than kube-system. Overrides $TILLER_NAMESPACE")
-	p.BoolVar(&displayEmoji, "display-emoji", true, "display emoji in output")
 
 	cmd.AddCommand(
-		newConfigCmd(out),
+		//newConfigCmd(out),
 		newCreateCmd(out),
 		newHomeCmd(out),
 		newInitCmd(out, in),
-		newUpCmd(out),
-		newVersionCmd(out),
+		//newUpCmd(out),
+		//newVersionCmd(out),
 		newPluginCmd(out),
-		newConnectCmd(out),
-		newDeleteCmd(out),
-		newLogsCmd(out),
-		newHistoryCmd(out),
-		newPackCmd(out),
+		//newConnectCmd(out),
+		//newDeleteCmd(out),
+		//newLogsCmd(out),
+		//newHistoryCmd(out),
+		//newPackCmd(out),
 	)
 
 	// Find and add plugins
-	loadPlugins(cmd, draftpath.Home(homePath()), out, in)
+	//loadPlugins(cmd, draftpath.Home(homePath()), out, in)
 
 	return cmd
 }
@@ -112,38 +95,8 @@ func defaultDraftHome() string {
 	return filepath.Join(homeEnvPath, ".draft")
 }
 
-func defaultTillerNamespace() string {
-	if namespace := os.Getenv(namespaceEnvVar); namespace != "" {
-		return namespace
-	}
-	return environment.DefaultTillerNamespace
-}
-
 func homePath() string {
 	return os.ExpandEnv(draftHome)
-}
-
-// configForContext creates a Kubernetes REST client configuration for a given kubeconfig context.
-func configForContext(context string) (clientcmd.ClientConfig, *rest.Config, error) {
-	clientConfig := kube.GetConfig(context)
-	config, err := clientConfig.ClientConfig()
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not get Kubernetes config for context %q: %s", context, err)
-	}
-	return clientConfig, config, nil
-}
-
-// getKubeClient creates a Kubernetes config and client for a given kubeconfig context.
-func getKubeClient(context string) (kubernetes.Interface, *rest.Config, error) {
-	_, config, err := configForContext(context)
-	if err != nil {
-		return nil, nil, err
-	}
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not get Kubernetes client: %s", err)
-	}
-	return client, config, nil
 }
 
 func debug(format string, args ...interface{}) {
@@ -160,22 +113,22 @@ func validateArgs(args, expectedArgs []string) error {
 	return nil
 }
 
-func setupHelm(kubeClient kubernetes.Interface, config *rest.Config, namespace string) (helm.Interface, error) {
-	tunnel, err := setupTillerConnection(kubeClient, config, namespace)
+// ReadConfig reads in global configuration from $DRAFT_HOME/config.toml
+func ReadConfig() (DraftConfig, error) {
+	var data DraftConfig
+	h := draftpath.Home(draftHome)
+	f, err := os.Open(h.Config())
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Could not open file %s: %s", h.Config(), err)
 	}
-
-	return helm.NewClient(helm.Host(fmt.Sprintf("127.0.0.1:%d", tunnel.Local))), nil
-}
-
-func setupTillerConnection(client kubernetes.Interface, config *rest.Config, namespace string) (*kube.Tunnel, error) {
-	tunnel, err := hpf.New(namespace, client, config)
-	if err != nil {
-		return nil, fmt.Errorf("Could not get a connection to tiller: %s\nPlease ensure you have run `helm init`", err)
+	defer f.Close()
+	if _, err := toml.DecodeReader(f, &data); err != nil {
+		return nil, fmt.Errorf("Could not decode config %s: %s", h.Config(), err)
 	}
-
-	return tunnel, err
+	return data, nil
 }
 
 func main() {

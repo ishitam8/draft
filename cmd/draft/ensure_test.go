@@ -3,11 +3,9 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/Azure/draft/pkg/draft/draftpath"
-	"github.com/Azure/draft/pkg/plugin"
 )
 
 func TestEnsureDirectories(t *testing.T) {
@@ -56,61 +54,61 @@ func TestEnsureDirectories(t *testing.T) {
 
 }
 
-func TestEnsurePlugin(t *testing.T) {
-	resetEnvVars := unsetEnvVars()
-	tempHome, teardown := tempDir(t, "draft-init")
-	defer func() {
-		teardown()
-		resetEnvVars()
-	}()
+// func TestEnsurePlugin(t *testing.T) {
+// 	resetEnvVars := unsetEnvVars()
+// 	tempHome, teardown := tempDir(t, "draft-init")
+// 	defer func() {
+// 		teardown()
+// 		resetEnvVars()
+// 	}()
 
-	cmd := &initCmd{
-		home: draftpath.Home(tempHome),
-		out:  ioutil.Discard,
-		in:   os.Stdin,
-	}
+// 	cmd := &initCmd{
+// 		home: draftpath.Home(tempHome),
+// 		out:  ioutil.Discard,
+// 		in:   os.Stdin,
+// 	}
 
-	if err := os.MkdirAll(cmd.home.Plugins(), 0755); err != nil {
-		t.Fatalf("Could not create %s: %s", cmd.home.Plugins(), err)
-	}
+// 	if err := os.MkdirAll(cmd.home.Plugins(), 0755); err != nil {
+// 		t.Fatalf("Could not create %s: %s", cmd.home.Plugins(), err)
+// 	}
 
-	builtinPlugin := &plugin.Builtin{Name: "echo", Version: "1.0.0", URL: filepath.Join("testdata", "plugins", "echo")}
-	empty := []*plugin.Plugin{}
+// 	builtinPlugin := &plugin.Builtin{Name: "echo", Version: "1.0.0", URL: filepath.Join("testdata", "plugins", "echo")}
+// 	empty := []*plugin.Plugin{}
 
-	if err := cmd.ensurePlugin(builtinPlugin, empty); err != nil {
-		t.Fatal(err)
-	}
-	installed, err := findPlugins(pluginDirPath(cmd.home))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(installed) != 1 {
-		t.Errorf("Expected 1 plugin to be installed, got %v", len(installed))
-	}
-}
+// 	if err := cmd.ensurePlugin(builtinPlugin, empty); err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	installed, err := findPlugins(pluginDirPath(cmd.home))
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	if len(installed) != 1 {
+// 		t.Errorf("Expected 1 plugin to be installed, got %v", len(installed))
+// 	}
+// }
 
-func TestEnsurePluginExisting(t *testing.T) {
-	resetEnvVars := unsetEnvVars()
-	tempHome, teardown := tempDir(t, "draft-init")
-	defer func() {
-		teardown()
-		resetEnvVars()
-	}()
+// func TestEnsurePluginExisting(t *testing.T) {
+// 	resetEnvVars := unsetEnvVars()
+// 	tempHome, teardown := tempDir(t, "draft-init")
+// 	defer func() {
+// 		teardown()
+// 		resetEnvVars()
+// 	}()
 
-	cmd := &initCmd{
-		home: draftpath.Home(tempHome),
-		out:  os.Stdout,
-		in:   os.Stdin,
-	}
+// 	cmd := &initCmd{
+// 		home: draftpath.Home(tempHome),
+// 		out:  os.Stdout,
+// 		in:   os.Stdin,
+// 	}
 
-	builtinPlugin := &plugin.Builtin{Name: "something", Version: "1.0.0"}
-	existingPlugins := []*plugin.Plugin{
-		{Metadata: &plugin.Metadata{
-			Name: "something", Version: "1.0.0"},
-		},
-	}
-	if err := cmd.ensurePlugin(builtinPlugin, existingPlugins); err != nil {
-		t.Fatal(err)
-	}
+// 	builtinPlugin := &plugin.Builtin{Name: "something", Version: "1.0.0"}
+// 	existingPlugins := []*plugin.Plugin{
+// 		{Metadata: &plugin.Metadata{
+// 			Name: "something", Version: "1.0.0"},
+// 		},
+// 	}
+// 	if err := cmd.ensurePlugin(builtinPlugin, existingPlugins); err != nil {
+// 		t.Fatal(err)
+// 	}
 
-}
+// }

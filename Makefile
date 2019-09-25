@@ -1,11 +1,13 @@
 DOCKER_REGISTRY ?= docker.io
 IMAGE_PREFIX    ?= microsoft
 IMAGE_TAG       ?= canary
-TARGETS         = darwin/amd64 linux/amd64 linux/386 linux/arm windows/amd64
+# TARGETS         = darwin/amd64 linux/amd64 linux/386 linux/arm windows/amd64
+TARGETS         = linux/amd64 windows/amd64
 DIST_DIRS       = find * -type d -exec
 APP             = draft
 INSTALL_DIR     := /usr/local/bin
 PROJECT         := draft
+VERSION 		= v2.0.0-alpha.3
 
 ifeq ($(OS),Windows_NT)
 	TARGET = $(PROJECT).exe
@@ -36,6 +38,7 @@ build:
 
 # usage: make clean build-cross dist APP=draft VERSION=v2.0.0-alpha.3
 .PHONY: build-cross
+toast: clean bootstrap build-cross dist
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
 	CGO_ENABLED=0 gox -output="_dist/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' $(GOXFLAGS) github.com/Azure/draft/cmd/$(APP)
@@ -46,9 +49,11 @@ dist:
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
 		$(DIST_DIRS) cp ../README.md {} \; && \
-		$(DIST_DIRS) tar -zcf draft-${VERSION}-{}.tar.gz {} \; && \
-		$(DIST_DIRS) zip -r draft-${VERSION}-{}.zip {} \; \
+		$(DIST_DIRS) tar -zcf ${APP}-${VERSION}-{}.tar.gz {} \; && \
+		$(DIST_DIRS) zip -r ${APP}-${VERSION}-{}.zip {} \; \
 	)
+	export DOCKER_BUILDKIT=1; \
+	docker build -t draft:${VERSION} .
 
 .PHONY: checksum
 checksum:
@@ -58,8 +63,8 @@ checksum:
 
 .PHONY: clean
 clean:
-	-rm bin/*
-	-rm rootfs/bin/*
+	#-rm bin/*
+	#-rm rootfs/bin/*
 	-rm -rf _dist/
 
 .PHONY: install

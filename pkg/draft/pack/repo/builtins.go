@@ -18,8 +18,8 @@ func Builtins() []*Builtin {
 	}
 	return []*Builtin{
 		{
-			Name:    "github.com/Azure/draft",
-			URL:     "https://github.com/Azure/draft",
+			Name:    "github.com/rakol-ms/draft",
+			URL:     "https://github.com/rakol-ms/draft",
 			Version: ver,
 		},
 	}

@@ -131,7 +131,7 @@ func (c *createCmd) run() error {
 		return fmt.Errorf("could not write metadata to draft.toml: %v", err)
 	}
 
-	ignoreFile := filepath.Join(c.dest, ignoreFileName)
+	ignoreFile := filepath.Join(c.dest, ".draftignore")
 	if _, err := os.Stat(ignoreFile); os.IsNotExist(err) {
 		d1 := []byte("*.swp\n*.tmp\n*.temp\n.git*\n")
 		if err := ioutil.WriteFile(ignoreFile, d1, 0644); err != nil {

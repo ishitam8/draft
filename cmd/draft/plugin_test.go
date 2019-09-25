@@ -163,7 +163,6 @@ func TestSetupEnv(t *testing.T) {
 		{"DRAFT_DEBUG", "1"},
 		{"DRAFT_HOME", ph.String()},
 		{"DRAFT_PACKS_HOME", ph.Packs()},
-		{"HELM_HOST", tillerHost},
 	} {
 		if got := os.Getenv(tt.name); got != tt.expect {
 			t.Errorf("Expected $%s=%q, got %q", tt.name, tt.expect, got)

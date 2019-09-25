@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/draft/pkg/osutil"
+	"github.com/Azure/draft/pkg/plugin"
 
 	"github.com/Azure/draft/pkg/draft/pack/repo"
-	"github.com/Azure/draft/pkg/plugin"
 )
 
 // ensureDirectories checks to see if $DRAFT_HOME exists
@@ -15,7 +15,6 @@ import (
 func (i *initCmd) ensureDirectories() error {
 	configDirectories := []string{
 		i.home.String(),
-		i.home.Plugins(),
 		i.home.Packs(),
 		i.home.Logs(),
 	}
@@ -85,7 +84,7 @@ func (i *initCmd) ensurePack(builtin *repo.Builtin, existingRepos []repo.Reposit
 		builtin.Version,
 		"--home",
 		string(i.home),
-		fmt.Sprintf("--debug=%v", flagDebug),
+		//fmt.Sprintf("--debug=%v", flagDebug),
 	}
 
 	packRepoCmd, _, err := rootCmd.Find([]string{"pack-repo"})
@@ -173,7 +172,6 @@ func (i *initCmd) ensurePlugin(builtin *plugin.Builtin, existingPlugins []*plugi
 		builtin.Version,
 		"--home",
 		string(i.home),
-		fmt.Sprintf("--debug=%v", flagDebug),
 	}
 
 	plugInstallCmd, _, err := rootCmd.Find([]string{"plugin", "install"})
