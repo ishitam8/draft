@@ -1,3 +1,6 @@
+
+# Draft library repo customised for Launch/GitOps POC
+
 ![Draft Logo](./docs/img/draft-logo.png)
 [![Build Status](https://circleci.com/gh/Azure/draft.svg?style=svg)](https://circleci.com/gh/Azure/draft)
 
